@@ -1,13 +1,15 @@
 package transactions;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class TransactionManager {
-    Map<Region, String[]> regionStringMap = new HashMap<>();
-    Map<Carrier, String[]> carrierStringMap = new HashMap<>();
-    List<Request> requestList = new ArrayList<>();
-    List<Offer> offerList = new ArrayList<>();
-    List<Transaction> transactionList = new ArrayList<>();
+    private Map<Region, String[]> regionStringMap = new HashMap<>();
+    private Map<Carrier, String[]> carrierStringMap = new HashMap<>();
+    private List<Request> requestList = new ArrayList<>();
+    private List<Offer> offerList = new ArrayList<>();
+    private List<Transaction> transactionList = new ArrayList<>();
+    private Set<Transaction> transactionSet = new TreeSet<>();
 
     //R1
     public List<String> addRegion(String regionName, String... placeNames) {
@@ -20,6 +22,7 @@ public class TransactionManager {
         Region region = new Region(regionName, placeNames);
         regionStringMap.put(region, placeNames);
         return new ArrayList<>(Arrays.asList(placeNames));
+
     }
 
     public List<String> addCarrier(String carrierName, String... regionNames) {
@@ -40,7 +43,7 @@ public class TransactionManager {
 
         }
 
-        return carrierRegionNames;
+        return carrierRegionNames.stream().sorted().collect(Collectors.toList());
     }
 
     public List<String> getCarriersForRegion(String regionName) {
@@ -55,18 +58,60 @@ public class TransactionManager {
 
         }
 
-        return carrierList;
+        return carrierList.stream().sorted().collect(Collectors.toList());
     }
 
     //R2
     public void addRequest(String requestId, String placeName, String productId)
             throws TMException {
+        if (placeName == null) {
+            throw new TMException("Name is null");
+        }
+        boolean placeNameExist = false;
+        label:
+        for (String[] values : regionStringMap.values()) {
+            for (String value : values) {
+                if (value.equals(placeName)) {
+                    placeNameExist = true;
+                    break label;
+                }
+            }
+        }
+        if (!placeNameExist) {
+            throw new TMException("Undefined");
+        }
+
+        for (Request request : requestList) {
+            if (request.getRequestId().equals(requestId)) {
+                throw new TMException("Duplicate request ID");
+            }
+        }
         Request request = new Request(requestId, placeName, productId);
         requestList.add(request);
     }
 
     public void addOffer(String offerId, String placeName, String productId)
             throws TMException {
+        if (placeName == null) {
+            throw new TMException("PlaceName is null");
+        }
+        boolean placeExist = false;
+        label:
+        for (String[] values : regionStringMap.values()) {
+            for (String value : values) {
+                if (value.equals(placeName)) {
+                    placeExist = true;
+                    break label;
+                }
+            }
+        }
+        if (!placeExist) {
+            throw new TMException("Undefined");
+        }
+        for (Offer offer : offerList) {
+            if (offer.getOfferId().equals(offerId))
+                throw new TMException("Duplicated offer ID");
+        }
         Offer offer = new Offer(offerId, placeName, productId);
         offerList.add(offer);
     }
@@ -75,6 +120,50 @@ public class TransactionManager {
     //R3
     public void addTransaction(String transactionId, String carrierName, String requestId, String offerId)
             throws TMException {
+
+        boolean theSameProductId = false;
+        boolean correctPlaceName = false;
+        Request neededRequest = null;
+        Offer neededOffer = null;
+        Carrier neededCarrier = null;
+        Map<Carrier, String[]> neededRegions = new HashMap<>();
+        List<Collection<String[]>> neededPlaceNames = new ArrayList<>();
+        for (Request request : requestList) {
+            if (request.getRequestId().equals(requestId)) {
+                neededRequest = request;
+            }
+        }
+        for (Offer offer : offerList) {
+            if (offer.getOfferId().equals(offerId)) {
+                neededOffer = offer;
+            }
+        }
+        if (neededRequest.getProductId().equals(neededOffer.getProductId())) {
+            theSameProductId = true;
+        }
+        for (Carrier carrier : carrierStringMap.keySet()) {
+            if (carrier.getCarrierName().equals(carrierName)) {
+                neededCarrier = carrier;
+            }
+        }
+        for (String[] value : carrierStringMap.values()) {
+            neededRegions.put(neededCarrier, neededCarrier.getRegionName());
+        }
+        for (String[] value : neededRegions.values()) {
+            neededPlaceNames.add(neededRegions.values());
+        }
+
+        if (!theSameProductId) {
+            throw new TMException("Product ID does not match");
+        }
+        for (Collection<String[]> neededPlaceName : neededPlaceNames) {
+            if (neededPlaceName.equals(neededOffer.getPlaceName()) && neededPlaceName.equals(neededRequest.getPlaceName())) {
+                correctPlaceName = true;
+            }
+        }
+        if (!correctPlaceName) {
+            throw new TMException("Wrong Place name");
+        }
         Transaction transaction = new Transaction(transactionId, carrierName, requestId, offerId);
         transactionList.add(transaction);
     }
@@ -94,6 +183,14 @@ public class TransactionManager {
 
     public SortedMap<String, Long> nTPerProduct() {
         return new TreeMap<String, Long>();
+    }
+
+    static class sortbyName implements Comparator<Region> {
+
+        @Override
+        public int compare(Region o1, Region o2) {
+            return o1.getRegionName().compareTo(o1.getRegionName());
+        }
     }
 
 

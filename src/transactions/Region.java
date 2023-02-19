@@ -11,9 +11,9 @@ public class Region {
         this.placeName = placeName;
     }
 
-    public Region(String regionName) {
-        this.regionName = regionName;
-    }
+//    public Region(String regionName) {
+//        this.regionName = regionName;
+//    }
 
     public String getRegionName() {
         return regionName;
