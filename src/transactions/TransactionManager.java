@@ -125,9 +125,11 @@ public class TransactionManager {
         boolean correctPlaceName = false;
         Request neededRequest = null;
         Offer neededOffer = null;
-        Carrier neededCarrier = null;
-        Map<Carrier, String[]> neededRegions = new HashMap<>();
-        List<Collection<String[]>> neededPlaceNames = new ArrayList<>();
+        List<String> neededRegions = new ArrayList<>();
+        List<String> neededPlaceNames = new ArrayList<>();
+        boolean hasOfferPlace = false;
+        boolean hasRequestPlace = false;
+
         for (Request request : requestList) {
             if (request.getRequestId().equals(requestId)) {
                 neededRequest = request;
@@ -143,25 +145,28 @@ public class TransactionManager {
         }
         for (Carrier carrier : carrierStringMap.keySet()) {
             if (carrier.getCarrierName().equals(carrierName)) {
-                neededCarrier = carrier;
+                neededRegions = Arrays.stream(carrierStringMap.get(carrier)).toList();
             }
         }
-        for (String[] value : carrierStringMap.values()) {
-            neededRegions.put(neededCarrier, neededCarrier.getRegionName());
+        for (String region : neededRegions) {
+            for (Region item : regionStringMap.keySet()) {
+                if (region.equals(item.getRegionName())) {
+                    neededPlaceNames.addAll(Arrays.stream(regionStringMap.get(item)).toList());
+                }
+            }
         }
-        for (String[] value : neededRegions.values()) {
-            neededPlaceNames.add(neededRegions.values());
-        }
-
         if (!theSameProductId) {
             throw new TMException("Product ID does not match");
         }
-        for (Collection<String[]> neededPlaceName : neededPlaceNames) {
-            if (neededPlaceName.equals(neededOffer.getPlaceName()) && neededPlaceName.equals(neededRequest.getPlaceName())) {
-                correctPlaceName = true;
+        for (String neededPlaceName : neededPlaceNames) {
+            if (neededPlaceName.equals(neededOffer.getPlaceName())) {
+                hasOfferPlace = true;
+            }
+            if (neededPlaceName.equals(neededRequest.getPlaceName())) {
+                hasRequestPlace = true;
             }
         }
-        if (!correctPlaceName) {
+        if (!hasOfferPlace || !hasRequestPlace) {
             throw new TMException("Wrong Place name");
         }
         Transaction transaction = new Transaction(transactionId, carrierName, requestId, offerId);
