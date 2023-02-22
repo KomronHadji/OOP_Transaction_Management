@@ -129,6 +129,16 @@ public class TransactionManager {
         List<String> neededPlaceNames = new ArrayList<>();
         boolean hasOfferPlace = false;
         boolean hasRequestPlace = false;
+//        for (Transaction transaction : transactionList) {
+//            if (transaction.getOfferId().equals(offerId)) {
+//                throw new TMException("Offer ID Bounded");
+//            }
+//        }
+//        for (Transaction transaction : transactionList) {
+//            if (transaction.getRequestId().equals(requestId)) {
+//                throw new TMException("Request ID Bounded");
+//            }
+//        }
 
         for (Request request : requestList) {
             if (request.getRequestId().equals(requestId)) {

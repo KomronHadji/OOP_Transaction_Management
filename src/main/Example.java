@@ -21,7 +21,7 @@ public class Example {
         list1 = tm.addRegion("reg2", "pl4", "pl8", "pl6");
         list1 = tm.addRegion("reg7", "pl4", "pl7", "pl7", "pl2");
         print(list1); //[pl2, pl7]
-        tm.addCarrier("c4", "reg1", "reg7");
+        tm.addCarrier("c4",  "reg7");
         tm.addCarrier("c5", "reg2", "reg1", "reg7");
         list1 = tm.addCarrier("c3", "reg2", "reg3", "reg2", "reg1");
         print(list1); //[reg1, reg2]
